@@ -1,0 +1,37 @@
+{
+	"__ver": "sys-pkg:1",
+	"_id": "ogwd1W5pRcu-JbBP52FmOg",
+	"key": "sys.dbui.perspective.default.HostedPackage",
+	"system": false,
+	"value": {
+		"edit": {
+			"layout": [
+				"package_files",
+				"available_versions",
+				"business_object_package"
+			]
+		},
+		"list": {
+			"actions": [
+				"new",
+				{
+					"icon": "fa-bolt",
+					"label": "Initialize",
+					"ws": "package_repo/init"
+				}
+			],
+			"fields": [
+				"business_object_package",
+				"available_versions",
+				"package_files"
+			]
+		},
+		"view": {
+			"layout": [
+				"business_object_package",
+				"available_versions",
+				"package_files"
+			]
+		}
+	}
+}

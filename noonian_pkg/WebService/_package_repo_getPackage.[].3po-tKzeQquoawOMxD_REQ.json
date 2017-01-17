@@ -1,0 +1,11 @@
+{
+	"__ver": "sys-pkg:1",
+	"_id": "3po-tKzeQquoawOMxD_REQ",
+	"path": "/package_repo/getPackage",
+	"rolespec": {
+		"roles": [
+			"REPO_DOWNLOADER"
+		],
+		"specType": "any"
+	}
+}

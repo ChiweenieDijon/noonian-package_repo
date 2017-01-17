@@ -1,0 +1,25 @@
+{
+	"__ver": "sys-pkg:1",
+	"_id": "cS_PrRdvR2Wym70FLAb1sw",
+	"class_name": "HostedPackage",
+	"definition": {
+		"available_versions": [
+			{
+				"type": "string"
+			}
+		],
+		"business_object_package": {
+			"denormalize_fields": [
+				"key"
+			],
+			"ref_class": "BusinessObjectPackage",
+			"type": "reference"
+		},
+		"package_files": [
+			{
+				"type": "attachment"
+			}
+		]
+	},
+	"system": true
+}

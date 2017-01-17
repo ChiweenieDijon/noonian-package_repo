@@ -1,0 +1,11 @@
+{
+	"__ver": "sys-pkg:1",
+	"_id": "joY-NbCdRY-X-e0EYnO7wA",
+	"before_after": "after",
+	"business_object": {
+		"_disp": "BusinessObjectPackage",
+		"_id": "QLN_PHr_Tj6nzgzrHA4XdQ"
+	},
+	"key": "sys.package_repo.onPackageUpdate",
+	"on_update": true
+}

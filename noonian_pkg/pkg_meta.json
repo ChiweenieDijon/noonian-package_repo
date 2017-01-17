@@ -1,0 +1,34 @@
+{
+	"__ver": "af4e6d5e-6c73-4ce6-901f-4a894e8a8ea9:2|vianey:1",
+	"_id": "PsDs1JsTQRmW7en47GkEBA",
+	"description": "Enable instance to share its packages for installation on other instances.",
+	"key": "sys.package_repo",
+	"major_version": 0,
+	"manifest": {
+		"BusinessObjectDef": {
+			"cS_PrRdvR2Wym70FLAb1sw": "sys-pkg:1"
+		},
+		"Config": {
+			"ogwd1W5pRcu-JbBP52FmOg": "sys-pkg:1"
+		},
+		"DataTrigger": {
+			"joY-NbCdRY-X-e0EYnO7wA": "sys-pkg:1"
+		},
+		"LabelGroup": {
+			"b0SCjfyXS8u2PM-ForYZVQ": "sys-pkg:1"
+		},
+		"Role": {
+			"M0DMVhdTSYumKFzO9TrV2w": "sys-pkg:1"
+		},
+		"User": {
+			"94XUJElFQeaDxsVj0ELPsA": "sys-pkg:1"
+		},
+		"WebService": {
+			"3po-tKzeQquoawOMxD_REQ": "sys-pkg:1",
+			"6w85fWPxRlGVuiBrR9_6jQ": "sys-pkg:1",
+			"KNLe4RXWRCmpFW7QlTZghw": "sys-pkg:1"
+		}
+	},
+	"minor_version": 2,
+	"name": "Package Repository"
+}
