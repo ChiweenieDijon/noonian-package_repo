@@ -1,6 +1,7 @@
 {
-	"__ver": "sys-pkg:1",
+	"__ver": "sys-pkg:2",
 	"_id": "cS_PrRdvR2Wym70FLAb1sw",
+	"abstract": false,
 	"class_name": "HostedPackage",
 	"definition": {
 		"available_versions": [
@@ -8,18 +9,14 @@
 				"type": "string"
 			}
 		],
-		"business_object_package": {
-			"denormalize_fields": [
-				"key"
-			],
-			"ref_class": "BusinessObjectPackage",
-			"type": "reference"
-		},
 		"package_files": [
 			{
 				"type": "attachment"
 			}
-		]
+		],
+		"package_key": {
+			"type": "string"
+		}
 	},
 	"system": true
 }
