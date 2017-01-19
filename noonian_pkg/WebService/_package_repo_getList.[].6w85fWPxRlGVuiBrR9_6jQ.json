@@ -1,11 +1,8 @@
 {
-	"__ver": "sys-pkg:1",
+	"__ver": "sys-pkg:4",
 	"_id": "6w85fWPxRlGVuiBrR9_6jQ",
 	"path": "/package_repo/getList",
-	"rolespec": {
-		"roles": [
-			"REPO_DOWNLOADER"
-		],
-		"specType": "any"
-	}
+	"rolespec": [
+		"M0DMVhdTSYumKFzO9TrV2w"
+	]
 }

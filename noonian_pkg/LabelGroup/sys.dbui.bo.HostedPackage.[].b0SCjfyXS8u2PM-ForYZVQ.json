@@ -1,5 +1,5 @@
 {
-	"__ver": "sys-pkg:1",
+	"__ver": "sys-pkg:2",
 	"_id": "b0SCjfyXS8u2PM-ForYZVQ",
 	"key": "sys.dbui.bo.HostedPackage",
 	"language": {
@@ -9,7 +9,7 @@
 	},
 	"value": {
 		"available_versions": "Available Versions",
-		"business_object_package": "Business Object Package",
-		"package_files": "Package Files"
+		"package_files": "Package Files",
+		"package_key": "Package Key"
 	}
 }

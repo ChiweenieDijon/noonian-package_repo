@@ -8,7 +8,7 @@ function (db, queryParams, res) {
         throw 'missing required parameters';
     }
     
-    return db.HostedPackage.findOne({"business_object_package.key":key})
+    return db.HostedPackage.findOne({"package_key":key})
     .then(
         function(hp){
             var pkgIndex=0;
@@ -28,7 +28,7 @@ function (db, queryParams, res) {
     )
     .then(
         function(f) {
-            console.log(f);
+            // console.log(f);
             return {
                 __stream_response:f.readstream
             }
