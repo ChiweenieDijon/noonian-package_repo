@@ -6,16 +6,16 @@
 	"major_version": 0,
 	"manifest": {
 		"BusinessObjectDef": {
-			"cS_PrRdvR2Wym70FLAb1sw": "sys-pkg:2"
+			"cS_PrRdvR2Wym70FLAb1sw": "sys-pkg:3"
 		},
 		"Config": {
-			"ogwd1W5pRcu-JbBP52FmOg": "sys-pkg:3"
+			"ogwd1W5pRcu-JbBP52FmOg": "sys-pkg:5"
 		},
 		"DataTrigger": {
 			"joY-NbCdRY-X-e0EYnO7wA": "sys-pkg:1"
 		},
 		"LabelGroup": {
-			"b0SCjfyXS8u2PM-ForYZVQ": "sys-pkg:2"
+			"b0SCjfyXS8u2PM-ForYZVQ": "sys-pkg:3"
 		},
 		"Role": {
 			"M0DMVhdTSYumKFzO9TrV2w": "sys-pkg:1"
@@ -26,15 +26,17 @@
 		"WebService": {
 			"3po-tKzeQquoawOMxD_REQ": "sys-pkg:4",
 			"6w85fWPxRlGVuiBrR9_6jQ": "sys-pkg:4",
-			"KNLe4RXWRCmpFW7QlTZghw": "deleted"
+			"KNLe4RXWRCmpFW7QlTZghw": "deleted",
+			"yoXU9E9gR1KhnTv3P9sHzw": "sys-pkg:1"
 		}
 	},
-	"minor_version": 5,
+	"minor_version": 6,
 	"name": "Package Repository"
 },
 "business_objects":[
 {
-	"__ver": "sys-pkg:2",
+	"__disp": "HostedPackage",
+	"__ver": "sys-pkg:3",
 	"_class": "BusinessObjectDef",
 	"_id": "cS_PrRdvR2Wym70FLAb1sw",
 	"abstract": false,
@@ -45,6 +47,9 @@
 				"type": "string"
 			}
 		],
+		"git_config": {
+			"type": "object"
+		},
 		"package_files": [
 			{
 				"type": "attachment"
@@ -54,10 +59,11 @@
 			"type": "string"
 		}
 	},
+	"doc": "\n @property {string[]} available_versions \n @property {object} git_config \n @property {attachment[]} package_files \n @property {string} package_key \n",
 	"system": true
 },
 {
-	"__ver": "sys-pkg:3",
+	"__ver": "sys-pkg:5",
 	"_class": "Config",
 	"_id": "ogwd1W5pRcu-JbBP52FmOg",
 	"allow_customize": false,
@@ -72,7 +78,8 @@
 				[
 					"package_files",
 					"available_versions"
-				]
+				],
+				"git_config"
 			]
 		},
 		"list": {
@@ -88,7 +95,8 @@
 				[
 					"package_files",
 					"available_versions"
-				]
+				],
+				"git_config"
 			]
 		}
 	}
@@ -107,7 +115,7 @@
 	"on_update": true
 },
 {
-	"__ver": "sys-pkg:2",
+	"__ver": "sys-pkg:3",
 	"_class": "LabelGroup",
 	"_id": "b0SCjfyXS8u2PM-ForYZVQ",
 	"key": "sys.dbui.bo.HostedPackage",
@@ -118,6 +126,7 @@
 	},
 	"value": {
 		"available_versions": "Available Versions",
+		"git_config": "Git Config",
 		"package_files": "Package Files",
 		"package_key": "Package Key"
 	}
@@ -161,5 +170,16 @@
 	"path": "/package_repo/getList",
 	"rolespec": [
 		"M0DMVhdTSYumKFzO9TrV2w"
+	]
+},
+{
+	"__disp": "/webhooks/githubTarget",
+	"__ver": "sys-pkg:1",
+	"_class": "WebService",
+	"_id": "yoXU9E9gR1KhnTv3P9sHzw",
+	"doc": "Target for github webhook",
+	"function": "function (db, postBody, httpRequestLib, Q, _) {\n    const GridFsService = db._svc.GridFsService;\n    const repoName = postBody && postBody.repository && postBody.repository.name;\n    \n    if(!repoName) {\n        console.error('githubTarget called with bad post: %j', postBody);\n        return 'invalid post body';\n    }\n    \n    \n    return db.HostedPackage.findOne({'git_config.repository_name':repoName}).then(function(hp) {\n        if(!hp) {\n            console.error('githubTarget called with bad repo name: %s \\n %j', repoName, postBody);\n            return 'Repository '+repoName+' not configured properly';\n        }\n        \n        console.log('Hosted Package: %j', hp);\n        var cfg = hp.git_config;\n        \n        var interestedBranch = 'refs/heads/'+cfg.trigger_branch;\n        \n        if(interestedBranch !== postBody.ref) {\n            return `Not interested in branch ${postBody.ref}`;\n        }\n        \n        //We're interested! Check pkg version...\n        var deferred = Q.defer();\n        \n        var url= postBody.repository.contents_url;\n        \n        if(!url) {\n            return \"Bad contents_url\";\n        }\n        url = url.replace('{+path}', cfg.dist_path);\n        \n        var header = {\n            Authorization:'token '+cfg.api_access_token,\n            'User-Agent':'Noonian-integration-'+cfg.api_user_agent\n        };\n        \n        httpRequestLib.get({\n            uri:url,\n            headers:header,\n            json:true\n        },\n        function(err,httpResponse, body) {\n            console.log(err, body);\n            if(err || !body || !body.length) {\n                var msg = err || 'Missing body';\n                console.error(msg);\n                return deferred.reject(msg);\n            }\n            \n            \n            const myVersions = hp.available_versions || [];\n            const toPull = [];\n            const regex = new RegExp(hp.package_key+'.([\\\\d\\\\.]+).json')\n            for(var file of body) {\n                let match = regex.exec(file.name);\n                let ver = match && match[1];\n                if(ver && myVersions.indexOf(ver) < 0) {\n                    toPull.push({\n                        ver,\n                        url:file.download_url,\n                        metaObj:{\n                            filename:hp.package_key+'.'+ver+'.json',\n                            size:file.size,\n                            type:'application/json'\n                        }\n                    });\n                }\n            }\n            \n            var dlPromises = [];\n            _.forEach(toPull, function(pullFile) {\n                var {ver, url, metaObj} = pullFile;\n            \n                console.log('Pulling '+url);\n                var respStream = httpRequestLib.get({uri:url,headers:header});\n                \n                dlPromises.push(\n                    GridFsService.saveFile(respStream, metaObj).then(function(fileId) {\n                        console.log('SAVED FILE');\n                        //file has been saved to gridfs\n                        metaObj.attachment_id = fileId;\n                        hp.available_versions = hp.available_versions || [];\n                        hp.available_versions.push(ver);\n                        \n                        hp.package_files = hp.package_files || [];\n                        hp.package_files.push(metaObj);\n                        hp.markModified('available_versions');\n                        hp.markModified('package_files');\n                    })\n                );\n            });\n            \n            Q.all(dlPromises).then(function() {\n                console.log('SAVING HP');\n                deferred.resolve(toPull);\n                return hp.save();\n            },\n            function(err) {\n                console.error(err);\n            });\n            \n            \n        });\n        \n        \n        return deferred.promise;\n        \n    });\n}",
+	"path": "/webhooks/githubTarget",
+	"rolespec": [
 	]
 }]}
