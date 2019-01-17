@@ -1,0 +1,705 @@
+{
+"metadata":{
+	"_id": "PsDs1JsTQRmW7en47GkEBA",
+	"changelog": [
+	],
+	"description": "Enable instance to share its packages for installation on other instances.",
+	"key": "sys.package_repo",
+	"major_version": 0,
+	"manifest": {
+		"BusinessObjectDef": {
+			"cS_PrRdvR2Wym70FLAb1sw": "sys-pkg:4"
+		},
+		"Config": {
+			"ogwd1W5pRcu-JbBP52FmOg": "sys-pkg:6"
+		},
+		"DataTrigger": {
+			"ixHglYDwTfO7_3jeUkE4kQ": "sys-pkg:6",
+			"joY-NbCdRY-X-e0EYnO7wA": "sys-pkg:1"
+		},
+		"HostedPackage": {
+			"CImAzkXoTVyuMHgbxllT3A": "sys-pkg:6",
+			"CXVFC5RiQjqkQ9Qxdaol-g": "sys-pkg:7",
+			"D4UFGDP7TEKB7emisxp_FQ": "sys-pkg:3",
+			"H21iTss6RLeV_EG-iOMiHw": "sys-pkg:1"
+		},
+		"LabelGroup": {
+			"b0SCjfyXS8u2PM-ForYZVQ": "sys-pkg:4"
+		},
+		"Role": {
+			"M0DMVhdTSYumKFzO9TrV2w": "sys-pkg:1"
+		},
+		"User": {
+			"94XUJElFQeaDxsVj0ELPsA": "sys-pkg:1"
+		},
+		"WebService": {
+			"3po-tKzeQquoawOMxD_REQ": "sys-pkg:6",
+			"6w85fWPxRlGVuiBrR9_6jQ": "sys-pkg:4",
+			"KNLe4RXWRCmpFW7QlTZghw": "deleted",
+			"TdIvF4NVSIC9ipK_4PMVIA": "sys-pkg:9",
+			"yoXU9E9gR1KhnTv3P9sHzw": "sys-pkg:1"
+		}
+	},
+	"minor_version": 7,
+	"name": "Package Repository",
+	"version": "0.7.0"
+},
+"business_objects":[
+{
+	"__disp": "HostedPackage",
+	"__ver": "sys-pkg:4",
+	"_class": "BusinessObjectDef",
+	"_id": "cS_PrRdvR2Wym70FLAb1sw",
+	"abstract": false,
+	"class_name": "HostedPackage",
+	"definition": {
+		"available_versions": [
+			{
+				"type": "string"
+			}
+		],
+		"git_config": {
+			"type": "object"
+		},
+		"package_files": [
+			{
+				"type": "attachment"
+			}
+		],
+		"package_key": {
+			"type": "string"
+		},
+		"package_metadata": {
+			"type": "object"
+		}
+	},
+	"doc": "\n @property {string[]} available_versions \n @property {object} git_config \n @property {attachment[]} package_files \n @property {string} package_key \n\n @property {object} package_metadata \n",
+	"system": true
+},
+{
+	"__ver": "sys-pkg:6",
+	"_class": "Config",
+	"_id": "ogwd1W5pRcu-JbBP52FmOg",
+	"allow_customize": false,
+	"key": "sys.dbui.perspective.default.HostedPackage",
+	"rolespec": [
+	],
+	"system": false,
+	"value": {
+		"edit": {
+			"layout": [
+				"package_key",
+				[
+					"package_files",
+					"available_versions"
+				],
+				"git_config",
+				"package_metadata"
+			]
+		},
+		"list": {
+			"fields": [
+				"package_key",
+				"available_versions",
+				"package_files"
+			]
+		},
+		"view": {
+			"layout": [
+				"package_key",
+				[
+					"package_files",
+					"available_versions"
+				],
+				"git_config",
+				"package_metadata"
+			]
+		}
+	}
+},
+{
+	"__ver": "sys-pkg:6",
+	"_class": "DataTrigger",
+	"_id": "ixHglYDwTfO7_3jeUkE4kQ",
+	"action": "function (db, Q, _) {\n    \n    if(!this.package_files || !this.package_files.length) {\n        return;\n    }\n    \n    const PackagingService = db._svc.PackagingService;\n    const GridFsService = db._svc.GridFsService;\n    \n    if(!PackagingService.getPackageMetadataFromStream) {\n        console.log('Upgrade Noonan core codebase to add metadata indexing to HostedPackage');\n        return;\n    }\n    \n    const pmd = this.package_metadata = this.package_metadata || {};\n    \n    const getPkgVersion = function(md) {\n\t\treturn  md.version || ((md.major_version||'0')+'.'+(md.minor_version||'0')+'.0');\n\t};\n    \n    const addPkgMetadata = function(attObj) {\n        return GridFsService.getFile(attObj.attachment_id).then(fd=>{\n            return PackagingService.getPackageMetadataFromStream(fd.readstream);\n        })\n        .then(md=>{\n            pmd[getPkgVersion(md)] = md;\n            console.log(pmd);\n        });\n    };\n    \n    const promiseList = [];\n    for(let i=0; i < this.available_versions.length; i++) {\n        let ver = this.available_versions[i];\n        if(ver.split('.').length < 3) {\n            ver = ver+'.0';\n        }\n        if(!pmd[ver] && this.package_files[i]) {\n            promiseList.push(addPkgMetadata(this.package_files[i]));\n        }\n    }\n    \n    return Q.allSettled(promiseList);\n}",
+	"before_after": "before",
+	"business_object": {
+		"_disp": "HostedPackage",
+		"_id": "cS_PrRdvR2Wym70FLAb1sw"
+	},
+	"doc": "Update metadata index when package files changes",
+	"key": "pkghost.HostedPackage.index metadata",
+	"on_create": true,
+	"on_delete": false,
+	"on_update": true
+},
+{
+	"__ver": "sys-pkg:1",
+	"_class": "DataTrigger",
+	"_id": "joY-NbCdRY-X-e0EYnO7wA",
+	"action": "function (db) {\n    if(this.minor_version && this.package_file) {\n        var currentVersion = (this.major_version || 0)+'.'+this.minor_version;\n        var attachment = this.package_file;\n        db.HostedPackage.findOne({'business_object_package._id':this._id}).then(function(hp) {\n            if(!hp) {\n                return;\n            }\n            \n            for(var i=0; i < hp.available_versions.length; i++) {\n                if(hp.available_versions[i] == currentVersion) {\n                    return;\n                }\n            }\n            hp.package_files.push(attachment);\n            hp.available_versions.push(currentVersion);\n            hp.save();\n        });\n    }\n}",
+	"before_after": "after",
+	"business_object": {
+		"_disp": "BusinessObjectPackage",
+		"_id": "QLN_PHr_Tj6nzgzrHA4XdQ"
+	},
+	"key": "sys.package_repo.onPackageUpdate",
+	"on_update": true
+},
+{
+	"__ver": "sys-pkg:6",
+	"_class": "HostedPackage",
+	"_id": "CImAzkXoTVyuMHgbxllT3A",
+	"available_versions": [
+		"0.7"
+	],
+	"package_files": [
+		{
+			"attachment_id": "muGfWjIMTSWYh8nRdew61w",
+			"filename": "sys.duphelper.0.7.json",
+			"size": 36181,
+			"type": "application/json"
+		}
+	],
+	"package_key": "sys.duphelper",
+	"package_metadata": {
+		"0.7.0": {
+			"_id": "W7MD5GI_T9qKrsdU6tYSfw",
+			"build_config": {
+				"exclude": [
+					"User",
+					"PackageConflict"
+				]
+			},
+			"dependencies": {
+				"bower": {
+					"angular": "^1.5.8"
+				},
+				"noonian-core": "~0.0.30"
+			},
+			"enable_building": false,
+			"key": "sys.duphelper",
+			"major_version": 0,
+			"manifest": {
+				"BusinessObjectDef": {
+					"4HAzS7aERKWG52VFbEK4Kw": "sys-pkg:1",
+					"d_vqHphUQKG5k93G7Y-uoA": "sys-pkg:3"
+				},
+				"CodeModule": {
+					"JLnSa13BQN6STX1RVLI3CQ": "sys-pkg:4"
+				},
+				"Config": {
+					"IdmlQudBTJWAT0olgYIPuQ": "sys-pkg:3",
+					"UCajhSqdRaK0MpHDDmOxXQ": "sys-pkg:6"
+				},
+				"DbuiCustomPage": {
+					"Ci34PWWqTZisDmU1wpXGsg": "sys-pkg:3"
+				},
+				"LabelGroup": {
+					"2B7gVUfxQ7yIfPNUEPQ4wA": "sys-pkg:1",
+					"CajUxrMTQpqJOHg5Ud119g": "sys-pkg:1"
+				},
+				"UiAction": {
+					"A0AuhvTeSx2QFR0n0cgyTA": "sys-pkg:4"
+				},
+				"WebService": {
+					"MbLcge_QQIWbngibKw6h1Q": "sys-pkg:4",
+					"ZbtAWuaPSTybQBoMdOn9hg": "sys-pkg:5",
+					"g0sZRYM7TgSAP9o4uxbKoA": "sys-pkg:4",
+					"tWTm6-MCR6KOZOqLrXkBzw": "sys-pkg:2"
+				}
+			},
+			"minor_version": 7,
+			"name": "Duplicate Helper",
+			"on_install_fn": "function () {return {user_parameters:{fields:{test:{type:'string', label:'Testing?'}}}}}"
+		}
+	}
+},
+{
+	"__ver": "sys-pkg:7",
+	"_class": "HostedPackage",
+	"_id": "CXVFC5RiQjqkQ9Qxdaol-g",
+	"available_versions": [
+		"0.2"
+	],
+	"package_files": [
+		{
+			"attachment_id": "HqjUF3nMTeWPh_xyLnfZYQ",
+			"filename": "dev.test_pkg.0.1.json",
+			"size": 1211,
+			"type": "application/json"
+		}
+	],
+	"package_key": "dev.test_pkg",
+	"package_metadata": {
+		"0.2.0": {
+			"_id": "nOB3OeYsTyq02IcT8rQBpA",
+			"build_config": {
+				"exclude": [
+					{
+						"class_name": "Config",
+						"condition": {
+							"key": "sys.user.preferences"
+						}
+					}
+				]
+			},
+			"changelog": [
+			],
+			"dependencies": {
+				"bower": {
+					"angular": "^1.5.8",
+					"angular-ui-tinymce": "^0.0.19",
+					"reveal.js": "^3.7.0"
+				},
+				"noonian": {
+					"sys": "~0.69.0",
+					"sys.duphelper": "~0.6.1",
+					"sys.email": "~0.14.0"
+				},
+				"noonian-core": "~0.0.30",
+				"npm": {
+					"csv": "~0.4.6",
+					"html-pdf": "2.1.0",
+					"jsondiffpatch": "~0.3.12"
+				}
+			},
+			"description": "Use for testing the features of package management",
+			"key": "dev.test_pkg",
+			"major_version": 0,
+			"minor_version": 2,
+			"name": "Test Package",
+			"on_install_fn": "function () {\n    return {\n        config:{increment_version:true},\n        user_parameters:{\n            fields:{keep_clientside:{type:'boolean', label:'Keep the clientside business objects?'}}\n        },\n        pre:function(userParams) {\n            console.log('PKG PRE-INSTALL %j', userParams);\n       },\n        post:function(userParams) {\n            console.log('PKG POST-INSTALL %j', userParams);\n        }\n    };\n}",
+			"version": "0.2.0"
+		}
+	}
+},
+{
+	"__ver": "sys-pkg:3",
+	"_class": "HostedPackage",
+	"_id": "D4UFGDP7TEKB7emisxp_FQ",
+	"available_versions": [
+		"0.19.0"
+	],
+	"package_files": [
+		{
+			"attachment_id": "fFGVYlvXS3arBufUTwZ8Zw",
+			"filename": "app.avp.0.19.json",
+			"size": 258484,
+			"type": "application/json"
+		}
+	],
+	"package_key": "app.avp",
+	"package_metadata": {
+		"0.19.0": {
+			"_id": "p3tIdL5wQ2ucLYEtvDagUg",
+			"build_config": {
+				"exclude": [
+					"Affiliation",
+					"Council",
+					"Location",
+					"Person",
+					"Workshop",
+					"User",
+					"TrashedWorkshop"
+				]
+			},
+			"dependencies": {
+				"bower": {
+					"angular-ui-calendar": "1.X"
+				},
+				"noonian": {
+					"sys.email": "0.X"
+				}
+			},
+			"description": "QEWR4: AVP California's workshop reporting DB",
+			"enable_building": true,
+			"key": "app.avp",
+			"major_version": 0,
+			"manifest": {
+				"AngularModule": {
+					"myP57XGhSNyDKrrcJFvO0Q": "sys:71|avp:11"
+				},
+				"AngularProvider": {
+					"4jdTjIFLQEa4EL7smN0AzA": "avp:53",
+					"5W1f4vxWTte-kQvjjgpyLA": "sys:37|avp:1",
+					"88f48T9RSeesxs1RJtr1PQ": "avp:1",
+					"cUMIBj4TQQq7xaapDw8-BA": "deleted"
+				},
+				"AngularTemplate": {
+					"HmsNXbWaSb2RSLmLSYlhSA": "avp:1",
+					"P3ALc-_RT8qY7-RvcXK8lQ": "avp:3",
+					"V_SObNYPR4OEZdkSrqK-1Q": "avp:8",
+					"b10qrYsYR5q_WSJaR3ORnw": "avp:1",
+					"lRoO3i4TTsi142xvw7vnIA": "sys:20|avp:1"
+				},
+				"BusinessObjectDef": {
+					"8R8LvtKnQSyM2srRTfmLcQ": "avp:2",
+					"B1Zh8IuBQXq_vOPTDNpb8A": "avp:2",
+					"NfCFfiNxSzCzlYyC4HVzAw": "avp:30",
+					"TsmNd_AjTeSkZzPCOVQCqw": "avp:44",
+					"dGAZLbVyQRKJWe1TN3mAGg": "avp:2",
+					"eTt1sebpTOOicLafo-B1PQ": "sys:6|avp:2",
+					"fx8zkTGrRrWhA5Ug432ZyA": "avp:12",
+					"rVjuQcaKTzi2KV5qbWdP3Q": "deleted"
+				},
+				"CodeModule": {
+					"JLnSa13BQN6STX1RVLI3CQ": "sys-pkg:4|avp:4",
+					"N23N-XSZRlG4vwxQ30GUpg": "avp:8",
+					"lWupL0hpRqW4ES8yrFLoaQ": "avp:11"
+				},
+				"Config": {
+					"-VuNWKvMSUG5z3BLV_6i6A": "f1cc234f-8637-45c6-8ee0-d91f1fce22df:3|avp:2",
+					"21AxfEuySSK2trLKLbYvEw": "avp:5",
+					"2kCebqAhSq23kIfWjZ7H5Q": "sys:1|avp:2",
+					"3a0At2R9Rn2MyeTY7FKWUA": "avp:8",
+					"4l8p_D7ESVS41zZuAgq5jA": "sys-pkg:3|avp:2",
+					"4uQ2vEXeTAeeFxAbp_wzYg": "avp:10",
+					"8AD7FV00S9a_WH2eLo_90g": "avp:5",
+					"CMHfC8YPTO6sEeNhLZmTVA": "sys:2|avp:2",
+					"EnhFXS4RQ1ieeAP6LV7z1g": "f1cc234f-8637-45c6-8ee0-d91f1fce22df:3|avp:7",
+					"F4LgLaVTSKKPaDJuVk06zA": "sys:3|avp:2",
+					"Hyn6p_TOQMy0NA6bVjmG4A": "avp:1",
+					"I05D8IQfSg2iJp3hCMucnQ": "avp:5",
+					"ILAkW8a0R12hBfSLIB46Fg": "avp:1",
+					"I_f0Ld-gSp2MtcPoVF9YaQ": "sys:8|avp:137",
+					"IsksOm7zQbiypDKw-fYp4Q": "avp:3",
+					"Ky_gqLg7SFeBFDN0KBAiRg": "avp:1",
+					"LR7Ck-ONSQWkK5P5YQJIXg": "avp:2",
+					"OjupRQRSQE-slpn8j5E9Ag": "avp:2",
+					"P80q1I8wQauv5KOuCtXm7w": "avp:13",
+					"PaN1LxXhSECOlqtN-6jilA": "avp:1",
+					"WyUPcN0qRieK0EFkr9hwLw": "avp:1",
+					"YStRJCItQdm1s523m3EplA": "f1cc234f-8637-45c6-8ee0-d91f1fce22df:4|avp:3",
+					"YngtWRYwS-uyexdhRsA6bg": "avp:4",
+					"Ypf7zkdDQ5Sqx3m3wm-k3w": "avp:13",
+					"aS4xa8FDRcuiuKWPQD_4wQ": "avp:10",
+					"bQaNGpa2QjiAKaSqeDa_eQ": "avp:26",
+					"fid4bgt6SR--FEWqQbh2Fg": "avp:1",
+					"g8d1heq3SkG8cztqwGt65w": "avp:6",
+					"iGbUOxIdTbSojZxR0yechw": "avp:1",
+					"iO9dhXxIQCmOSR5VMiYguQ": "avp:5",
+					"qFPCKl2JQqi7sFAi2XDMPA": "avp:2",
+					"uRXm0s9lRVq9WZiOga2gKQ": "avp:5",
+					"ubrzpPxhS-Gt-VeBsIJbOg": "avp:12",
+					"wmwSlkcSR5SQZU-8D59u7Q": "avp:1",
+					"yjoQfy6JT9OfNzPFSEHqEQ": "sys:3|avp:3",
+					"ymHfz7hxRXa5WyqRy_XMcw": "avp:4",
+					"z0O5WUt7QhWsIejtepfJwg": "avp:19"
+				},
+				"CssResource": {
+					"OrRDEHvCTXWXGInpgQ8sKA": "avp:50",
+					"lmiaziUUSQqAwepD6ReKNw": "avp:3"
+				},
+				"DataAccessControl": {
+					"2NrUfmBhRumFd-PEzLZjiw": "avp:3",
+					"3OcAgsQLTi6srqtTcK5VOA": "avp:3",
+					"DPaObWgYSnWOtCuZBJhaCg": "avp:2",
+					"E6ktNLVDRg-H8OVxkPnOJw": "avp:2",
+					"F3dfy62hR1qPArHSW9nz1A": "avp:2",
+					"KktrYtKPRquv0BDhAPogUw": "avp:3",
+					"SUF-FjWtQXq-uCAdsrZGVQ": "avp:3",
+					"VyInxIKUQG6hLLNJwcX9QA": "avp:2",
+					"fAIMN5FARr-WibB47qArQQ": "avp:2",
+					"iLir5SDRQTa5AT9BPucZDA": "avp:3",
+					"itpgbxg5Si6vWIN4oSHGrA": "avp:2",
+					"oTKlJv3aRpSTR2E9wP88GQ": "avp:1",
+					"x4PjbDDhTbiWgS8s8z3t9w": "avp:2"
+				},
+				"DataExport": {
+					"Vs_E0HrSSk6_aNtNUvexaw": "sys:1|avp:9"
+				},
+				"DataTrigger": {
+					"0Af3mLd2QD-AUpdRPsAI-g": "avp:16",
+					"3DlWQdH3QHeVKHGudZukUA": "avp:33",
+					"Df6e4qTwTFeOCAL0YLbFMg": "avp:4",
+					"HpRR5_tWT0SSxrSjh4omWw": "avp:3",
+					"J3wChgEeRsGcfN-N2aKcNQ": "avp:1",
+					"e8h0tyv6TQegMt7vgUAaCA": "avp:19",
+					"g-O7UxtsTU2ehXZfIan2KA": "avp:8",
+					"jkNjqUhKTb-bHGSxJ4h5GA": "avp:3"
+				},
+				"DbuiCustomPage": {
+					"4_Tb3SJJTCS9pVRcwP9lgA": "avp:51",
+					"JeqN-TNPQu-Pvzr2i-V2ZQ": "avp:37",
+					"N9IFJ39fTI2R2h_XBrMSCQ": "avp:3",
+					"XVbIAQuYQ4OTY3GnYqa76w": "avp:5"
+				},
+				"DbuiReport": {
+					"l6xdB8xvQ3W3I4CwoIOwFA": "avp:9"
+				},
+				"EmailMessage": {
+					"-k_mRSOjSbSIaANmncPIzw": "avp:4",
+					"qwENPZ9PTf6xOvFOhACPuw": "avp:1"
+				},
+				"EmailTransport": {
+					"ZEbp-SAiT--EHQ2-tdHc4g": "avp:8"
+				},
+				"Enumeration": {
+					"1XEio144ShOw4ucu5jcUzQ": "sys:1|avp:1",
+					"IHhwX96WQYC1NRiHVnJ2rg": "avp:2",
+					"MzqEzK_UTECQuhv66R2yTw": "avp:3",
+					"NfQ87xRMQLSuVTQUnkGZiA": "avp:2",
+					"PUL51oizTu-TdoaRK_ggOA": "avp:1",
+					"RZsKlGvBTxi_Pm8IPCkksA": "avp:2",
+					"VkNOfo4yQlq8GC8GO9wwTA": "avp:3",
+					"i2O48i_hQWiNCc6Silx9_A": "avp:2",
+					"qYafd3jxR5uYH-bZfejXmg": "avp:2",
+					"zM2PnslqQnq3H7ke1FJrjQ": "avp:4"
+				},
+				"FieldType": {
+					"Qywi2S8xT86_tQl4leIXNA": "sys:2|avp:1"
+				},
+				"FieldTypeUiSpec": {
+					"dbsSp1ocTteSn8rRtQjB-w": "deleted",
+					"g0djyUgiTyupVg8IfAh6Vg": "avp:4",
+					"psR-jm2OQAKqR96M_2ULPg": "avp:36",
+					"wtxc-F3kSw-ZrDIlOwhKPw": "avp:101"
+				},
+				"HtmlResource": {
+					"TC3OphLiSLi4iOSl7FU7lw": "avp:3"
+				},
+				"JsResource": {
+					"27ODbDmxSa2ux-M1gtW3MA": "avp:9",
+					"aoOEL8NCSHm9si_gvwNqTw": "avp:1",
+					"fodonMbKT_OuNzlOuLIakg": "avp:1"
+				},
+				"LabelGroup": {
+					"-iqoMBsCQM6Jx9FkgDfTFg": "avp:3",
+					"5-xVN2PzRXiiDfsUQjv6_A": "avp:6",
+					"5IJPNKkZQu-5DFsk1Ve36A": "avp:2",
+					"6XccweYRQsy_0zmYdz_vcA": "avp:6",
+					"HMIR7S_IRMO1Lxar9NhA0A": "avp:4",
+					"KKmTCzawTbWnH6VKIdGF8g": "avp:13",
+					"Khc1dy9LRfuLQdSgtN9KIw": "avp:3",
+					"Kp1tC1ohQiqCx3qafogWCw": "avp:2",
+					"KvS95-KtT8O2OnPpksbFbA": "avp:6",
+					"MdvhjT1bRMC40vXVyiXHtQ": "avp:3",
+					"Nr8Pel0vShuctqFKmKQ0Zg": "avp:2",
+					"QQ950gnISACOiIP8ewa-UQ": "avp:2",
+					"RLdJVFtaSPup13sxZLCfFA": "avp:1",
+					"VtwJ_Qw7TPqV6kIgV3ujsQ": "avp:3",
+					"ZA7UewsFSr2q7nC3xbq8bw": "avp:2",
+					"_QrXcqXVTjqddtOxKYlG9g": "sys:2|avp:2",
+					"cuMkQgypRMKN4LMB0Jr6AA": "avp:3",
+					"hROvRuBATxmEQJkqjtV9wQ": "avp:2",
+					"nMTPxjuoR2G44yeWPo5TUQ": "sys:1|avp:1",
+					"oKRP7h8rSlyDNemUipBcVg": "avp:1",
+					"rrXCaWGWT9WfWsnlzKGMOg": "avp:6",
+					"vBzltNC6RTSY4acFHF1Nig": "avp:1",
+					"wAqvqSMlRFySn5jYx8Z2rg": "avp:2",
+					"zGAtQ1OySpesfPA-kINKsw": "avp:4"
+				},
+				"Menu": {
+					"5dk1WzbnREOncSKD33xQMA": "avp:8",
+					"GJ3uvFkJRZ-8I3hmHxprag": "avp:6",
+					"WKij3WWVT1uX4T5LBLAkfA": "avp:8",
+					"XPcF48zbQEKV6QXPdt3Ddw": "avp:2",
+					"aOJuyuV5SeSBEahCwA5lZw": "avp:1",
+					"k_CKvNzvQwq9N4lE7LyZsw": "avp:12",
+					"uFQe_OyoQmSCKCp121k_fg": "avp:3"
+				},
+				"QueryOp": {
+					"aZG5D6MQQImi1DLsFHpegw": "sys:5|avp:6"
+				},
+				"RemotePackageRepository": {
+					"vbIpJ6l7RBask_VdWUx0fg": "sys:3|avp:6"
+				},
+				"Role": {
+					"C98FKlxfSrOJ0rewx-kb8A": "avp:2",
+					"DKO1QmjeTAS9JA8fxV-zDQ": "avp:1",
+					"jYTNRLfsRWC9_YinxCvG0Q": "avp:2"
+				},
+				"ScheduleTrigger": {
+					"PAELfN54Rduy2fPz2EoAyg": "avp:40"
+				},
+				"UiAction": {
+					"-NzB9WPFRZuDP8eF3BUzYQ": "avp:2",
+					"7K1EXWRiQrats2HVt6nVvQ": "avp:6",
+					"YVoLDRZqRL6PuTRoRKISAg": "avp:4",
+					"s_wGVdY3TTW0UnwFJbe9Ug": "avp:2"
+				},
+				"WebService": {
+					"-PnxpAdTSQ6vG3DBye_69w": "avp:22",
+					"2y-sO81JTW6laQuu60eBgw": "avp:10",
+					"KsSqXyPyTo-YZJRnDbXWBg": "avp:1",
+					"O0ktzJf6SCmaO-cl41EKzQ": "avp:6",
+					"SyEHsemnTh-n2NSBLjLvbQ": "avp:3",
+					"Tn0qiXoLRmuRNj9-mR97WA": "avp:2",
+					"__sYt5kSS4-RiCdF2d9Sww": "avp:21",
+					"_a-bJcU6RMaLhKnrXjDL6w": "avp:2",
+					"amOtee7fSNKbLAW1uJQ9Hw": "avp:3",
+					"coZKUfasRFqzlAlod8XrYw": "avp:5",
+					"dcF9-il_SB62OzFpermfWQ": "avp:31",
+					"e0vd2cxaTm6sfmV4dT1AtQ": "avp:16",
+					"fZlqUEDqTvKVe46fX5rgAQ": "avp:10",
+					"j-ulFZH7SIqBIS9tCef_gA": "avp:8",
+					"jArTsqWDR-eMOhOaV8JIqA": "avp:3",
+					"nH6_MnzFRCWCMoStsIyDCw": "avp:7",
+					"sA4isRLWRuKu-KU0HXp86Q": "avp:18",
+					"sPRolRYKRU-N7UK3CDLCJQ": "avp:6",
+					"tWTm6-MCR6KOZOqLrXkBzw": "sys-pkg:2|avp:1",
+					"wM_AzR75StesG0oUEXzGvQ": "avp:6",
+					"xpke5135QIWsUPLH5DiA1Q": "avp:10",
+					"zJJONclVTvS6x7LKpEQbFA": "avp:2"
+				}
+			},
+			"minor_version": 19,
+			"name": "QEWR4"
+		}
+	}
+},
+{
+	"__ver": "sys-pkg:1",
+	"_class": "HostedPackage",
+	"_id": "H21iTss6RLeV_EG-iOMiHw",
+	"available_versions": [
+		"0.14"
+	],
+	"package_files": [
+		{
+			"attachment_id": "fSWAUCExT_OA-gPNrVq55A",
+			"filename": "sys.email.0.14.json",
+			"size": 28537,
+			"type": "application/json"
+		}
+	],
+	"package_key": "sys.email",
+	"package_metadata": {
+		"0.14.0": {
+			"_id": "oJAyYGU-TmmRaVUzIq6TLg",
+			"changelog": [
+			],
+			"description": "Objects and APIs to support sending Emails",
+			"enable_building": false,
+			"key": "sys.email",
+			"major_version": 0,
+			"manifest": {
+				"AngularApp": {
+					"kRd_Ft64QFey_at4tgphXA": "sys:34|sys-pkg:6",
+					"uz92VzHGQBiXE2pY1ydunw": "sys-pkg:16"
+				},
+				"BusinessObjectDef": {
+					"ECYM18GkSPmhOJ1s-SYZ-A": "sys-pkg:1",
+					"Wquqn1IhTNuZk7M4pNLveg": "sys-pkg:1",
+					"x8JPTt3uSKuEtu2R4qKBNQ": "sys-pkg:1",
+					"xGOtowhXRQKPapjKv1Us7A": "sys-pkg:1"
+				},
+				"CodeModule": {
+					"ZSx0FUI2S3KdenaXgISYPQ": "sys-pkg:5"
+				},
+				"Config": {
+					"4l8p_D7ESVS41zZuAgq5jA": "sys-pkg:3",
+					"D35PIWqFRaaWn_5SyB_CEg": "sys-pkg:1",
+					"M1cmYRNXQJC0yeXlwQbeOQ": "sys-pkg:3",
+					"O0FJXhFKR6Ou6949OTHzfA": "sys-pkg:7",
+					"Q0e4YR9TTQ-qr2xC3fUwIw": "sys-pkg:1",
+					"ipxt6xkKQquPjOZLWRz4uw": "sys-pkg:1"
+				},
+				"DataTrigger": {
+					"CXX81RnNQ4Cl1m_uzcLhsg": "sys-pkg:13"
+				},
+				"EmailMessage": {
+					"4z1LSTfLQpecUzE9AdkrEw": "sys-pkg:2"
+				},
+				"EmailTransport": {
+					"px8kYWB5SPC72t3Oqvbf7w": "sys-pkg:1"
+				},
+				"LabelGroup": {
+					"8t6faAADT-iEuMoeFQqB8Q": "sys-pkg:1",
+					"Ge2VBpNXSwqKIeFRgV5McA": "sys-pkg:1",
+					"hP2fT989T4C5X8I5iFt11A": "sys-pkg:1"
+				},
+				"WebService": {
+					"VVA5VVZ9RQ-5idW42T07ow": "sys-pkg:2",
+					"tGlPRXCUTDOeD2C5gMB1hw": "sys-pkg:13"
+				}
+			},
+			"minor_version": 14,
+			"name": "Email"
+		}
+	}
+},
+{
+	"__ver": "sys-pkg:4",
+	"_class": "LabelGroup",
+	"_id": "b0SCjfyXS8u2PM-ForYZVQ",
+	"key": "sys.dbui.bo.HostedPackage",
+	"language": {
+		"_disp": "English",
+		"_id": "-9vPfv2lEeSFtiimx_V4dw",
+		"code": "en"
+	},
+	"value": {
+		"available_versions": "Available Versions",
+		"git_config": "Git Config",
+		"package_files": "Package Files",
+		"package_key": "Package Key",
+		"package_metadata": "Package Metadata"
+	}
+},
+{
+	"__ver": "sys-pkg:1",
+	"_class": "Role",
+	"_id": "M0DMVhdTSYumKFzO9TrV2w",
+	"name": "REPO_DOWNLOADER"
+},
+{
+	"__ver": "sys-pkg:1",
+	"_class": "User",
+	"_id": "94XUJElFQeaDxsVj0ELPsA",
+	"name": "RepoAccess",
+	"password": {
+		"hash": "$2a$10$uuGwXcLlQLQwpK.ke.1LQu9/3HcmdE/e9ObKFg3E3N19IGZ2H3RuC"
+	},
+	"roles": [
+		{
+			"_disp": "REPO_DOWNLOADER",
+			"_id": "M0DMVhdTSYumKFzO9TrV2w"
+		}
+	]
+},
+{
+	"__disp": "/package_repo/getPackage",
+	"__ver": "sys-pkg:6",
+	"_class": "WebService",
+	"_id": "3po-tKzeQquoawOMxD_REQ",
+	"function": "function (db, queryParams, res) {\n    const semver = require('semver');\n    const GridFsService = db._svc.GridFsService;\n    \n    const key=queryParams.key;\n    const requestedVersion=queryParams.version; //can be specific version,  or range\n    \n    if(!key) {\n        throw 'missing required parameters';\n    }\n    \n    //Simply for backward compatibility\n    const normalizeVersionStr = function(v) {\n        if(v.split('.').length < 3) {\n            v = v+'.0';\n        }\n        return v;\n    };\n    \n    \n    \n    \n    return db.HostedPackage.findOne({\"package_key\":key})\n    .then(\n        function(hp){\n            \n            if(!hp) {\n                throw `Invalid package key ${key}`;\n            }\n            \n            var pkgIndex=0;\n            var versions = hp.available_versions;\n            \n            if(!requestedVersion) {\n                requestedVersion = versions[versions.length - 1];\n            }\n            \n            //find the most recent version we have that satisfies requestedVersion\n            for(pkgIndex=versions.length-1; pkgIndex >= 0; pkgIndex--) {\n                var haveVersion  = normalizeVersionStr(versions[pkgIndex]);\n                if(semver.satisfies(haveVersion, requestedVersion)) {\n                    break;\n                }\n            }\n            if(pkgIndex < 0) {\n                throw `Couldn't find suitable version of ${key} for ${requestedVersion}`;\n            }\n            \n            var fileId = hp.package_files[pkgIndex].attachment_id;\n            \n            return GridFsService.getFile(fileId);\n        }\n    )\n    .then(\n        function(f) {\n            // console.log(f);\n            return {\n                __stream_response:f.readstream\n            }\n        }\n    );\n    \n}",
+	"path": "/package_repo/getPackage",
+	"rolespec": [
+		"M0DMVhdTSYumKFzO9TrV2w"
+	]
+},
+{
+	"__ver": "sys-pkg:4",
+	"_class": "WebService",
+	"_id": "6w85fWPxRlGVuiBrR9_6jQ",
+	"function": "function (db, _) {\n    return db.HostedPackage.find({}).then(function(hpList){\n        var result = [];\n        _.forEach(hpList, function(hp) {\n            var versions = hp.available_versions;\n            result.push({\n               key:hp.package_key,\n               latest_version:versions[versions.length-1],\n               available_versions: versions\n            });\n        });\n        return result;\n    });\n}",
+	"path": "/package_repo/getList",
+	"rolespec": [
+		"M0DMVhdTSYumKFzO9TrV2w"
+	]
+},
+{
+	"__disp": "/package_repo/getMetaData",
+	"__ver": "sys-pkg:9",
+	"_class": "WebService",
+	"_id": "TdIvF4NVSIC9ipK_4PMVIA",
+	"doc": "Get package metadata for specified keys/versions",
+	"function": "function (db, _, queryParams) {\n    const semver = require('semver');\n    \n    var keys = {}; \n    var versions = {};\n    \n    var keysParam;\n    if(queryParams.keys) {\n        try {\n            keysParam = JSON.parse(queryParams.keys);\n        }\n        catch(err) {\n            keysParam  = queryParams.keys;\n        }\n    }\n    \n    if(keysParam instanceof Array) {\n        //Passed an array of keys -> grab latest version of each one\n        _.forEach(keysParam, k=>{keys[k]=true;});\n    }\n    else if(typeof keysParam === 'object') {\n        //Passed an object whose keys are pkg keys, values are pkg versions\n        keys = keysParam;\n    }\n    else if(typeof keysParam === 'string') {\n        //Passed a single pkg key -> grab latest version of it\n        keys[keysParam] = true;\n    }\n    \n    const normalizeVersionStr = function(v) {\n        if(v.split('.').length < 3) {\n            v = v+'.0';\n        }\n        return v;\n    }\n    \n    const queryObj = {};\n    const keysArr = Object.keys(keys);\n    if(keysArr.length) queryObj.package_key = {$in:keysArr};\n    \n    return db.HostedPackage.find(queryObj).then(function(hpList) {\n        if(!keysArr.length) {\n            //Default to grab latest version of all packages\n            _.forEach(hpList, hp=>{keys[hp.package_key] = true});\n        }\n        console.log('Retrieving metadata for %j', keys);\n        var result = [];\n        _.forEach(hpList, function(hp) {\n            let askingFor;\n            if(askingFor = keys[hp.package_key]) {\n                var versions = hp.available_versions;\n                if(typeof askingFor === 'boolean') {\n                    askingFor = versions[versions.length-1];\n                }\n                \n                askingFor = normalizeVersionStr(askingFor);\n                \n                let md = hp.package_metadata[askingFor];\n                \n                if(!md) {\n                    for(let i=versions.length-1; i >=0; i--) {\n                        let toTry = normalizeVersionStr(versions[i]);\n                        // console.log('satisfies(%s, %s)', toTry, askingFor);\n                        if(semver.satisfies(toTry, askingFor)) {\n                            md = hp.package_metadata[toTry];\n                            if(md) break;\n                        }\n                    }\n                }\n                \n                md && result.push(md);\n            }\n        });\n        return result;\n    });\n}",
+	"path": "/package_repo/getMetaData",
+	"rolespec": [
+		"M0DMVhdTSYumKFzO9TrV2w"
+	]
+},
+{
+	"__disp": "/webhooks/githubTarget",
+	"__ver": "sys-pkg:1",
+	"_class": "WebService",
+	"_id": "yoXU9E9gR1KhnTv3P9sHzw",
+	"doc": "Target for github webhook",
+	"function": "function (db, postBody, httpRequestLib, Q, _) {\n    const GridFsService = db._svc.GridFsService;\n    const repoName = postBody && postBody.repository && postBody.repository.name;\n    \n    if(!repoName) {\n        console.error('githubTarget called with bad post: %j', postBody);\n        return 'invalid post body';\n    }\n    \n    \n    return db.HostedPackage.findOne({'git_config.repository_name':repoName}).then(function(hp) {\n        if(!hp) {\n            console.error('githubTarget called with bad repo name: %s \\n %j', repoName, postBody);\n            return 'Repository '+repoName+' not configured properly';\n        }\n        \n        console.log('Hosted Package: %j', hp);\n        var cfg = hp.git_config;\n        \n        var interestedBranch = 'refs/heads/'+cfg.trigger_branch;\n        \n        if(interestedBranch !== postBody.ref) {\n            return `Not interested in branch ${postBody.ref}`;\n        }\n        \n        //We're interested! Check pkg version...\n        var deferred = Q.defer();\n        \n        var url= postBody.repository.contents_url;\n        \n        if(!url) {\n            return \"Bad contents_url\";\n        }\n        url = url.replace('{+path}', cfg.dist_path);\n        \n        var header = {\n            Authorization:'token '+cfg.api_access_token,\n            'User-Agent':'Noonian-integration-'+cfg.api_user_agent\n        };\n        \n        httpRequestLib.get({\n            uri:url,\n            headers:header,\n            json:true\n        },\n        function(err,httpResponse, body) {\n            console.log(err, body);\n            if(err || !body || !body.length) {\n                var msg = err || 'Missing body';\n                console.error(msg);\n                return deferred.reject(msg);\n            }\n            \n            \n            const myVersions = hp.available_versions || [];\n            const toPull = [];\n            const regex = new RegExp(hp.package_key+'.([\\\\d\\\\.]+).json')\n            for(var file of body) {\n                let match = regex.exec(file.name);\n                let ver = match && match[1];\n                if(ver && myVersions.indexOf(ver) < 0) {\n                    toPull.push({\n                        ver,\n                        url:file.download_url,\n                        metaObj:{\n                            filename:hp.package_key+'.'+ver+'.json',\n                            size:file.size,\n                            type:'application/json'\n                        }\n                    });\n                }\n            }\n            \n            var dlPromises = [];\n            _.forEach(toPull, function(pullFile) {\n                var {ver, url, metaObj} = pullFile;\n            \n                console.log('Pulling '+url);\n                var respStream = httpRequestLib.get({uri:url,headers:header});\n                \n                dlPromises.push(\n                    GridFsService.saveFile(respStream, metaObj).then(function(fileId) {\n                        console.log('SAVED FILE');\n                        //file has been saved to gridfs\n                        metaObj.attachment_id = fileId;\n                        hp.available_versions = hp.available_versions || [];\n                        hp.available_versions.push(ver);\n                        \n                        hp.package_files = hp.package_files || [];\n                        hp.package_files.push(metaObj);\n                        hp.markModified('available_versions');\n                        hp.markModified('package_files');\n                    })\n                );\n            });\n            \n            Q.all(dlPromises).then(function() {\n                console.log('SAVING HP');\n                deferred.resolve(toPull);\n                return hp.save();\n            },\n            function(err) {\n                console.error(err);\n            });\n            \n            \n        });\n        \n        \n        return deferred.promise;\n        \n    });\n}",
+	"path": "/webhooks/githubTarget",
+	"rolespec": [
+	]
+}]}

@@ -1,0 +1,14 @@
+{
+	"__ver": "sys-pkg:6",
+	"_id": "ixHglYDwTfO7_3jeUkE4kQ",
+	"before_after": "before",
+	"business_object": {
+		"_disp": "HostedPackage",
+		"_id": "cS_PrRdvR2Wym70FLAb1sw"
+	},
+	"doc": "Update metadata index when package files changes",
+	"key": "pkghost.HostedPackage.index metadata",
+	"on_create": true,
+	"on_delete": false,
+	"on_update": true
+}

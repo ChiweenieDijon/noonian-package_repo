@@ -1,24 +1,49 @@
 function (db, queryParams, res) {
-    var GridFsService = db._svc.GridFsService;
+    const semver = require('semver');
+    const GridFsService = db._svc.GridFsService;
     
-    var key=queryParams.key;
-    var version=queryParams.version;
+    const key=queryParams.key;
+    const requestedVersion=queryParams.version; //can be specific version,  or range
     
-    if(!key || !version) {
+    if(!key) {
         throw 'missing required parameters';
     }
+    
+    //Simply for backward compatibility
+    const normalizeVersionStr = function(v) {
+        if(v.split('.').length < 3) {
+            v = v+'.0';
+        }
+        return v;
+    };
+    
+    
+    
     
     return db.HostedPackage.findOne({"package_key":key})
     .then(
         function(hp){
+            
+            if(!hp) {
+                throw `Invalid package key ${key}`;
+            }
+            
             var pkgIndex=0;
             var versions = hp.available_versions;
             
-            for(pkgIndex=0; pkgIndex < versions.length; pkgIndex++) {
-                if(versions[pkgIndex] == version) break;
+            if(!requestedVersion) {
+                requestedVersion = versions[versions.length - 1];
             }
-            if(pkgIndex >= versions.length) {
-                throw 'version '+version+' not found';
+            
+            //find the most recent version we have that satisfies requestedVersion
+            for(pkgIndex=versions.length-1; pkgIndex >= 0; pkgIndex--) {
+                var haveVersion  = normalizeVersionStr(versions[pkgIndex]);
+                if(semver.satisfies(haveVersion, requestedVersion)) {
+                    break;
+                }
+            }
+            if(pkgIndex < 0) {
+                throw `Couldn't find suitable version of ${key} for ${requestedVersion}`;
             }
             
             var fileId = hp.package_files[pkgIndex].attachment_id;

@@ -1,5 +1,5 @@
 {
-	"__ver": "sys-pkg:3",
+	"__ver": "sys-pkg:4",
 	"_id": "b0SCjfyXS8u2PM-ForYZVQ",
 	"key": "sys.dbui.bo.HostedPackage",
 	"language": {
@@ -11,6 +11,7 @@
 		"available_versions": "Available Versions",
 		"git_config": "Git Config",
 		"package_files": "Package Files",
-		"package_key": "Package Key"
+		"package_key": "Package Key",
+		"package_metadata": "Package Metadata"
 	}
 }

@@ -1,21 +1,30 @@
 {
-	"__ver": "sys-pkg:4",
+	"__ver": "sys-pkg:8",
 	"_id": "PsDs1JsTQRmW7en47GkEBA",
+	"changelog": [
+	],
 	"description": "Enable instance to share its packages for installation on other instances.",
 	"key": "sys.package_repo",
 	"major_version": 0,
 	"manifest": {
 		"BusinessObjectDef": {
-			"cS_PrRdvR2Wym70FLAb1sw": "sys-pkg:3"
+			"cS_PrRdvR2Wym70FLAb1sw": "sys-pkg:4"
 		},
 		"Config": {
-			"ogwd1W5pRcu-JbBP52FmOg": "sys-pkg:5"
+			"ogwd1W5pRcu-JbBP52FmOg": "sys-pkg:6"
 		},
 		"DataTrigger": {
+			"ixHglYDwTfO7_3jeUkE4kQ": "sys-pkg:6",
 			"joY-NbCdRY-X-e0EYnO7wA": "sys-pkg:1"
 		},
+		"HostedPackage": {
+			"CImAzkXoTVyuMHgbxllT3A": "sys-pkg:6",
+			"CXVFC5RiQjqkQ9Qxdaol-g": "sys-pkg:7",
+			"D4UFGDP7TEKB7emisxp_FQ": "sys-pkg:3",
+			"H21iTss6RLeV_EG-iOMiHw": "sys-pkg:1"
+		},
 		"LabelGroup": {
-			"b0SCjfyXS8u2PM-ForYZVQ": "sys-pkg:3"
+			"b0SCjfyXS8u2PM-ForYZVQ": "sys-pkg:4"
 		},
 		"Role": {
 			"M0DMVhdTSYumKFzO9TrV2w": "sys-pkg:1"
@@ -24,17 +33,19 @@
 			"94XUJElFQeaDxsVj0ELPsA": "sys-pkg:1"
 		},
 		"WebService": {
-			"3po-tKzeQquoawOMxD_REQ": "sys-pkg:4",
+			"3po-tKzeQquoawOMxD_REQ": "sys-pkg:6",
 			"6w85fWPxRlGVuiBrR9_6jQ": "sys-pkg:4",
 			"KNLe4RXWRCmpFW7QlTZghw": "deleted",
+			"TdIvF4NVSIC9ipK_4PMVIA": "sys-pkg:9",
 			"yoXU9E9gR1KhnTv3P9sHzw": "sys-pkg:1"
 		}
 	},
-	"minor_version": 6,
+	"minor_version": 7,
 	"name": "Package Repository",
 	"package_file": {
-		"attachment_id": "YKXzRqMGTPeojtVHChNW4g",
-		"filename": "sys.package_repo.0.6.json",
+		"attachment_id": "_efNDdSJQPOfijqlG1yTUQ",
+		"filename": "sys.package_repo.0.7.0.json",
 		"type": "application/json"
-	}
+	},
+	"version": "0.7.0"
 }

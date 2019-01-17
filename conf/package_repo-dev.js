@@ -15,7 +15,10 @@ module.exports = {
   enableHistory:false, //awaiting fix to system to enable this
   
   packageFsConfig:{
-    'sys.package_repo':'../noonian-package_repo/noonian_pkg'
+    'sys.package_repo':{
+	syncDir:'../noonian-package_repo/noonian_pkg',
+	distDir:'../noonian-package_repo/dist'
+    }
   },
   
   // Secret for session, TODO configure to use PKI
