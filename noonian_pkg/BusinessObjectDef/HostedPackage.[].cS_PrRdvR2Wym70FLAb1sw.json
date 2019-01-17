@@ -1,5 +1,5 @@
 {
-	"__ver": "sys-pkg:2",
+	"__ver": "sys-pkg:3",
 	"_id": "cS_PrRdvR2Wym70FLAb1sw",
 	"abstract": false,
 	"class_name": "HostedPackage",
@@ -9,6 +9,9 @@
 				"type": "string"
 			}
 		],
+		"git_config": {
+			"type": "object"
+		},
 		"package_files": [
 			{
 				"type": "attachment"
@@ -18,5 +21,6 @@
 			"type": "string"
 		}
 	},
+	"doc": "\n @property {string[]} available_versions \n @property {object} git_config \n @property {attachment[]} package_files \n @property {string} package_key \n",
 	"system": true
 }

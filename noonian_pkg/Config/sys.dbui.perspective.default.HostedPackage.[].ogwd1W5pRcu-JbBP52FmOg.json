@@ -1,5 +1,5 @@
 {
-	"__ver": "sys-pkg:3",
+	"__ver": "sys-pkg:5",
 	"_id": "ogwd1W5pRcu-JbBP52FmOg",
 	"allow_customize": false,
 	"key": "sys.dbui.perspective.default.HostedPackage",
@@ -13,7 +13,8 @@
 				[
 					"package_files",
 					"available_versions"
-				]
+				],
+				"git_config"
 			]
 		},
 		"list": {
@@ -29,7 +30,8 @@
 				[
 					"package_files",
 					"available_versions"
-				]
+				],
+				"git_config"
 			]
 		}
 	}
