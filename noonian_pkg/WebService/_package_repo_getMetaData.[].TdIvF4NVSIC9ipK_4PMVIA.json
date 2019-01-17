@@ -1,0 +1,9 @@
+{
+	"__ver": "sys-pkg:9",
+	"_id": "TdIvF4NVSIC9ipK_4PMVIA",
+	"doc": "Get package metadata for specified keys/versions",
+	"path": "/package_repo/getMetaData",
+	"rolespec": [
+		"M0DMVhdTSYumKFzO9TrV2w"
+	]
+}
